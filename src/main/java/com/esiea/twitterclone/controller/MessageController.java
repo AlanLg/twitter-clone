@@ -2,7 +2,6 @@ package com.esiea.twitterclone.controller;
 
 import com.esiea.twitterclone.model.MessageDTO;
 import com.esiea.twitterclone.service.MessageService;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -14,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
 
-import java.time.Duration;
 import java.util.List;
 
 @Slf4j
@@ -41,11 +39,6 @@ public class MessageController {
 
     @GetMapping(path = "", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<ServerSentEvent<MessageDTO>> getEvents() {
-        return Flux.interval(Duration.ofSeconds(5))
-                .mapNotNull(sequence -> ServerSentEvent.<MessageDTO>builder()
-                        .event("message")
-                        .data(messageService.getMessageQueue().poll())
-                        .build())
-                .filter(p -> p.data() != null);
+        return messageService.getSink().asFlux().map(e -> ServerSentEvent.builder(e).build());
     }
 }
